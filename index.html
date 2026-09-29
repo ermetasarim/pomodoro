@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Odak | Pars Studio</title>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;600;700&family=IBM+Plex+Mono:wght@600&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#070b12;--p:#10182a;--line:rgba(255,255,255,.08);--t:#e8eef8;--m:#8b9bb4;--b:#5aa7ff}
+*{box-sizing:border-box}body{margin:0;background:radial-gradient(circle at 20% 0,rgba(90,167,255,.14),transparent 35%),var(--bg);color:var(--t);font-family:"IBM Plex Sans",sans-serif}
+.wrap{width:min(860px,calc(100% - 28px));margin:auto;padding:28px 0 60px}
+header{display:flex;justify-content:space-between;align-items:center;margin-bottom:22px}
+h1{margin:0;font-size:20px}.sub{color:var(--m);font-size:12px}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.card{background:linear-gradient(180deg,#121b2e,#0e1626);border:1px solid var(--line);border-radius:18px;padding:20px}
+.timer{font-family:"IBM Plex Mono",monospace;font-size:72px;text-align:center;letter-spacing:2px}
+.modes{display:flex;gap:8px;justify-content:center;margin:8px 0 16px}
+.btn{background:var(--p);border:1px solid var(--line);color:var(--t);border-radius:10px;padding:9px 14px;cursor:pointer;font-weight:600;text-decoration:none}
+.pri{background:#16477d;border-color:#2b5d93}.on{background:rgba(90,167,255,.16)}
+.row{display:flex;gap:8px;justify-content:center;flex-wrap:wrap}
+input{background:var(--p);border:1px solid var(--line);color:var(--t);border-radius:10px;padding:10px;width:100%}
+li{display:flex;gap:10px;align-items:center;padding:8px 0;border-bottom:1px solid var(--line);list-style:none}
+ul{margin:0;padding:0} .done{opacity:.45;text-decoration:line-through}
+.stat{display:flex;justify-content:space-between;color:var(--m);font-size:13px;margin-top:10px}
+@media(max-width:740px){.grid{grid-template-columns:1fr}.timer{font-size:56px}}
+</style></head>
+<body>
+<div class="wrap">
+  <header><div><h1>ODAK</h1><div class="sub">Pomodoro + yapilacaklar</div></div>
+  <a class="btn" href="https://ermetasarim.github.io/projeler/">Portfoy</a></header>
+  <div class="grid">
+    <div class="card">
+      <div class="modes">
+        <button class="btn on" id="m25" onclick="setMode(25,0)">Odak 25</button>
+        <button class="btn" id="m5" onclick="setMode(5,1)">Kisa 5</button>
+        <button class="btn" id="m15" onclick="setMode(15,2)">Uzun 15</button>
+      </div>
+      <div class="timer" id="clock">25:00</div>
+      <div class="row"><button class="btn pri" id="go" onclick="toggle()">Baslat</button><button class="btn" onclick="resetT()">Sifirla</button></div>
+      <div class="stat"><span>Bugun tamamlanan tur</span><b id="tur">0</b></div>
+    </div>
+    <div class="card">
+      <h3 style="margin:0 0 10px">Bugunun isleri</h3>
+      <div class="row" style="margin-bottom:10px"><input id="task" placeholder="Gorev yaz, Enter"></div>
+      <ul id="list"></ul>
+      <div class="stat"><span>Kalan</span><b id="left">0</b></div>
+    </div>
+  </div>
+</div>
+<script>
+const KEY="pars_odak_v1";
+let S=JSON.parse(localStorage.getItem(KEY)||"{}");
+S.tasks=S.tasks||[]; S.tur=S.tur||0; S.day=S.day||"";
+const today=new Date().toISOString().slice(0,10);
+if(S.day!==today){S.tur=0;S.day=today}
+const save=()=>localStorage.setItem(KEY,JSON.stringify(S));
+let mode=0, total=25*60, left=total, run=false, iv=null;
+const pad=n=>String(n).padStart(2,"0");
+function paint(){const m=Math.floor(left/60),s=left%60;document.getElementById("clock").textContent=pad(m)+":"+pad(s);document.getElementById("tur").textContent=S.tur}
+function setMode(min,i){mode=i;total=min*60;left=total;run=false;clearInterval(iv);document.getElementById("go").textContent="Baslat";["m25","m5","m15"].forEach((id,k)=>document.getElementById(id).classList.toggle("on",k===i));paint()}
+function toggle(){run=!run;document.getElementById("go").textContent=run?"Duraklat":"Baslat";if(run) iv=setInterval(()=>{left--; if(left<=0){left=0;run=false;clearInterval(iv);document.getElementById("go").textContent="Baslat";if(mode===0){S.tur++;save()}} paint()},1000); else clearInterval(iv)}
+function resetT(){left=total;run=false;clearInterval(iv);document.getElementById("go").textContent="Baslat";paint()}
+function draw(){document.getElementById("list").innerHTML=S.tasks.map((t,i)=>`<li class="${t.ok?"done":""}"><input type="checkbox" ${t.ok?"checked":""} onchange="tog(${i})"><span style="flex:1">${t.ad}</span><button class="btn" onclick="del(${i})">sil</button></li>`).join("")||"<li style='color:var(--m)'>Liste bos.</li>";document.getElementById("left").textContent=S.tasks.filter(t=>!t.ok).length}
+function tog(i){S.tasks[i].ok=!S.tasks[i].ok;save();draw()}
+function del(i){S.tasks.splice(i,1);save();draw()}
+document.getElementById("task").onkeydown=e=>{if(e.key!=="Enter")return;const v=e.target.value.trim();if(!v)return;S.tasks.push({ad:v,ok:false});e.target.value="";save();draw()}
+paint();draw();
+</script></body></html>

@@ -1,2 +1,3 @@
-# pomodoro
-Pomodoro + yapılacaklar
+# Odak
+Pomodoro + yapılacaklar.
+https://ermetasarim.github.io/pomodoro/
